@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+# Boots SC EVM and runs retesteth / ETS. Intended for running it locally.
+
+EXPECTED_PASSING_TESTS=2348
+
+GIT_ROOT="$(git rev-parse --show-toplevel || :)"
+SCRIPT_DIR="$GIT_ROOT/integration-tests/ets"
+
+if ! [[ -d "$GIT_ROOT" ]]; then
+  >&2 echo "error: This script must be run from inside SC EVM project directory."
+  exit 1
+fi
+
+cd "$GIT_ROOT"
+source "$SCRIPT_DIR/../common.sh"
+git submodule update --init --recursive integration-tests/ets/tests
+
+echo "booting SC EVM with log level WARN and waiting for RPC API to be up."
+sbt -Dlogging.logs-level=WARN \
+    -Dsc-evm.node-key-file="${SCRIPT_DIR}/node.key" \
+    testnode/run &
+
+sbt_process=$!
+
+trap "kill $sbt_process" EXIT
+
+wait_for_sc_evm $sbt_process
+
+final_exit_code=0
+mkdir -p out/
+
+function run_and_summarize {
+  now=$(date +"%F-%Hh%M")
+  out_file="out/retesteth-$1-$now.log"
+
+  echo "running retesteth $1 with output to $out_file for Berlin hard fork"
+  "$SCRIPT_DIR/retesteth" -t "$1" -- --verbosity 3 --singlenet Berlin 2>&1 | tee $out_file || :
+  exit_code=$?
+  echo "retesteth $1 exit code: $exit_code"
+
+  style="info"
+# for now ETS is not completely passing so we do not expect the exit code to be a success
+#  if [[ "$exit_code" -gt "0" ]]; then
+#    final_exit_code="$exit_code"
+#    style="error"
+#  fi
+
+  summary=$(sed -n '/Total Tests Run/,$p' $out_file)
+  if [[ -z "$summary" ]]; then
+    summary="retesteth crashed; check the artifacts"
+  fi
+  passed=$(grep -oP 'Total Tests Run: \d+' $out_file)
+  failed=$(grep -oP 'TOTAL ERRORS DETECTED: \d+' $out_file)
+  nb_passed=$(echo "$passed" | sed 's/Total Tests Run: //')
+
+  if [[ "$nb_passed" -lt "$EXPECTED_PASSING_TESTS" ]]; then
+    echo "Number of passing tests $nb_passed is lower than the expected number $EXPECTED_PASSING_TESTS." >&2
+    final_exit_code=4
+  fi
+
+  echo "retesteth: $1 -- $passed -- $failed"
+  echo "$summary"
+}
+
+run_and_summarize "GeneralStateTests"
+echo 'skipping BlockchainTests'
+# run_and_summarize "BlockchainTests"
+
+exit $final_exit_code

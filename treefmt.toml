@@ -1,0 +1,56 @@
+# One CLI to format the code tree - https://github.com/numtide/treefmt
+[formatter.nix]
+command = "alejandra"
+includes = ["*.nix"]
+
+[formatter.prettier]
+command = "prettier"
+options = ["--write"]
+includes = [
+  "*.js",
+  "*.json",
+  "*.md",
+  "*.yml",
+  "*.yaml",
+]
+excludes = [
+  "CHANGELOG.md",
+  "integration-tests/ets/tests/*",
+  "*genesis*",
+  "nix/cloud/kv/*",
+  "nix/cloud/dashboards/*",
+  "nix/metal/encrypted/*"
+]
+
+[formatter.shell]
+command = "shfmt"
+options = [
+  "-i",
+  "2", # indent 2
+  "-s", # simplify the code
+  "-w", # write back to the file
+
+]
+includes = ["*.sh"]
+excludes = ["integration-tests/ets/tests/*"]
+
+[formatter.terraform]
+command = "terraform"
+options = ["fmt"]
+includes = ["*.tf"]
+
+[formatter.terragrunt]
+command = "terragrunt"
+options = ["hclfmt"]
+includes = ["*.hcl"]
+
+[global]
+excludes = [
+  "src/trustless-sidechain/**",
+  "ets/tests/**"
+]
+
+[formatter.python]
+command = "black"
+includes = ["*.py"]
+excludes = ["integration-tests/ets/tests/*"]

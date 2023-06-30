@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+dir="$(cd "$(dirname "$0")" && pwd)"
+
+separator="--"
+if [[ $@ =~ "--" ]]; then
+  separator=""
+fi
+
+retesteth $@ $separator --testpath $dir/tests --datadir $dir/config --clients sc_evm_network

@@ -1,0 +1,166 @@
+version: "3.8"
+
+volumes:
+  grafana_data: {}
+  loki_data: {}
+  prometheus_data: {}
+
+networks:
+  sc-evm-net:
+
+services:
+  # sends logs to loki
+  promtail:
+    image: grafana/promtail:2.4.2
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail.yaml
+      - ./sc-evm-instances/sc-evm1/sc-evm-devnet/logs:/sc-evm1/logs
+      - ./sc-evm-instances/sc-evm2/sc-evm-devnet/logs:/sc-evm2/logs
+      - ./sc-evm-instances/sc-evm3/sc-evm-devnet/logs:/sc-evm3/logs
+    command: -config.file=/etc/promtail.yaml
+    networks:
+      - sc-evm-net
+
+  loki:
+    image: grafana/loki:2.4.2
+    depends_on:
+      - promtail
+    command: -config.file=/etc/loki.yaml
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki.yaml
+      - loki_data:/data/loki
+    networks:
+      - sc-evm-net
+
+  tempo:
+    image: grafana/tempo:1.2.1
+    command:
+      - --target=all
+      - --storage.trace.backend=local
+      - --storage.trace.local.path=/var/tempo
+      - --compactor.compaction.block-retention=24h
+      - --distributor.log-received-traces
+      - --config.file=/etc/tempo.yaml
+    volumes:
+      - ./tempo/tempo-config.yaml:/etc/tempo.yaml
+    networks:
+      - sc-evm-net
+
+  prometheus:
+    image: prom/prometheus:v2.31.1
+    volumes:
+      - ./prometheus/prometheus-config.yaml:/etc/prometheus.yaml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus.yaml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--enable-feature=exemplar-storage"
+    ports:
+      - 9090:9090
+    links:
+      - scevm1:scevm1
+      - scevm2:scevm2
+      - scevm3:scevm3
+    depends_on:
+      - scevm1
+      - scevm2
+      - scevm3
+    networks:
+      - sc-evm-net
+
+  grafana:
+    image: grafana/grafana:9.1.5
+    depends_on:
+      - prometheus
+      - tempo
+    ports:
+      - 3000:3000
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./../../nix/cloud/dashboards/evm-sidechain-application-metrics.json:/etc/grafana/provisioning/dashboards/evm-sidechain-application-metrics.json
+    networks:
+      - sc-evm-net
+
+  scevm1:
+    image: scevm_image:latest
+    ports:
+      - 9076:9076 # p2p
+      - 8546:8546 # rpc
+    networks:
+      - sc-evm-net
+    environment:
+      # the following 3 env vars can be used to customize the data dir and ports if needed
+      # - SC_EVM_DATADIR=/home/demiourgos728/.sc-evm/sc-evm
+      # - SC_EVM_P2P_PORT=9076
+      # - SC_EVM_RPC_PORT=8546
+      - LEADER_PRIVATE_KEY=f46bf49093d585f2ea781a0bf6d83468919f547999ad91c9210256979d88eef1
+      - SC_EVM_BOOTSTRAP_1
+      - SC_EVM_BOOTSTRAP_2
+      - SC_EVM_BOOTSTRAP_3
+      - START_SYNC=true
+      - SYNC_MODE=fast
+      - SC_EVM_LOGLEVEL=DEBUG
+      - SC_EVM_AKKA_LOGLEVEL=DEBUG
+      - METRICS_ENABLED=true
+      - TRACING_ENABLED=true
+      - TRACING_EXPORT_HOST=tempo
+      - TRACING_EXPORT_PORT=55681
+    volumes:
+      - "./sc-evm-instances/sc-evm1:/home/demiourgos728/.sc-evm"
+    command: ["-Dconfig.file=./conf/local-standalone/application.conf"]
+
+  scevm2:
+    image: scevm_image:latest
+    ports:
+      - 13798:13798 #prometheus
+      - 9077:9076 # p2p
+      - 8547:8546 # rpc
+    networks:
+      - sc-evm-net
+    environment:
+      - LEADER_PRIVATE_KEY=f46bf49093d585f2ea781a0bf6d83468919f547999ad91c9210256979d88eef2
+      - SC_EVM_BOOTSTRAP_1
+      - SC_EVM_BOOTSTRAP_2
+      - SC_EVM_BOOTSTRAP_3
+      - START_SYNC=true
+      - SYNC_MODE=fast
+      - SC_EVM_LOGLEVEL=DEBUG
+      - SC_EVM_AKKA_LOGLEVEL=DEBUG
+      - METRICS_ENABLED=true
+      - TRACING_ENABLED=true
+      - TRACING_EXPORT_HOST=tempo
+      - TRACING_EXPORT_PORT=55681
+    volumes:
+      - "./sc-evm-instances/sc-evm2:/home/demiourgos728/.sc-evm"
+    command: ["-Dconfig.file=./conf/local-standalone/application.conf"]
+
+  scevm3:
+    image: scevm_image:latest
+    ports:
+      - 9078:9076 # p2p
+      - 8548:8546 # rpc
+    networks:
+      - sc-evm-net
+    environment:
+      - LEADER_PRIVATE_KEY=f46bf49093d585f2ea781a0bf6d83468919f547999ad91c9210256979d88eef3
+      - SC_EVM_BOOTSTRAP_1
+      - SC_EVM_BOOTSTRAP_2
+      - SC_EVM_BOOTSTRAP_3
+      - START_SYNC=true
+      - SYNC_MODE=fast
+      - SC_EVM_LOGLEVEL=DEBUG
+      - SC_EVM_AKKA_LOGLEVEL=DEBUG
+      - METRICS_ENABLED=true
+      - TRACING_ENABLED=true
+      - TRACING_EXPORT_HOST=tempo
+      - TRACING_EXPORT_PORT=55681
+    volumes:
+      - "./sc-evm-instances/sc-evm3:/home/demiourgos728/.sc-evm"
+    command: ["-Dconfig.file=./conf/local-standalone/application.conf"]

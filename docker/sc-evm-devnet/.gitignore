@@ -1,0 +1,4 @@
+# files created by docker-compose devnet
+keystore
+logs
+rocksdb

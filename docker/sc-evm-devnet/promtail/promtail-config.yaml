@@ -1,0 +1,38 @@
+server:
+  http_listen_port: 9080
+#  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: scevm1
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: scevm1
+          host: scevm1
+          app: scevm
+          __path__: /scevm1/logs/scevm.log
+  - job_name: scevm2
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: scevm2
+          host: scevm2
+          app: scevm
+          __path__: /scevm2/logs/scevm.log
+  - job_name: scevm3
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: scevm3
+          host: scevm3
+          app: scevm
+          __path__: /scevm3/logs/scevm.log

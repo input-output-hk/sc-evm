@@ -1,0 +1,71 @@
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    uid: VictoriaMetrics
+    url: http://prometheus:9090
+    basicAuth: false
+    isDefault: false
+    jsonData:
+      graphiteVersion: "1.1"
+      tlsAuth: false
+      tlsAuthWithCACert: false
+      exemplarTraceIdDestinations:
+        - datasourceUid: tempo
+          matcherRegex: traceId=(\w+)
+          name: traceId
+    secureJsonData:
+      tlsCACert: "..."
+      tlsClientCert: "..."
+      tlsClientKey: "..."
+    version: 1
+    editable: true
+
+  - name: Tempo
+    type: tempo
+    access: proxy
+    orgId: 1
+    url: http://tempo:3200
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: false
+    apiVersion: 1
+    uid: tempo
+    jsonData:
+      httpMethod: GET
+      tracesToLogs:
+        datasourceUid: loki
+        tags: ["app"]
+        mappedTags: [{ key: "app", value: "app" }]
+        mapTagNamesEnabled: false
+        filterByTraceID: true
+        filterBySpanID: false
+        lokiSearch: true
+      serviceMap:
+        datasourceUid: "prometheus"
+      search:
+        hide: false
+      nodeGraph:
+        enabled: true
+
+  - name: Loki
+    type: loki
+    access: proxy
+    orgId: 1
+    url: http://loki:3100
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: false
+    apiVersion: 1
+    uid: loki
+    jsonData:
+      derivedFields:
+        # interval link
+        - datasourceUid: tempo
+          matcherRegex: traceId=(\w+)
+          name: traceId
+          url: "$${__value.raw}"

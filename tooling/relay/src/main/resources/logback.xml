@@ -1,0 +1,13 @@
+<configuration>
+  <property name="stdoutEncoderPattern" value="%d [%logger{36}] %-5level %replace([%mdc] ){'\\[\\] $', ''}- %msg%n"/>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${stdoutEncoderPattern}</pattern>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="STDOUT"/>
+  </root>
+</configuration>

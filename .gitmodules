@@ -1,0 +1,3 @@
+[submodule "ets/tests"]
+	path = integration-tests/ets/tests
+	url = https://github.com/ethereum/tests.git

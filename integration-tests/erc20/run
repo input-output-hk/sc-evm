@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+GIT_ROOT="$(git rev-parse --show-toplevel || :)"
+SCRIPT_DIR="$GIT_ROOT/integration-tests/erc20"
+
+if ! [[ -d "$GIT_ROOT" ]]; then
+  >&2 echo "error: This script must be run from inside SC EVM project directory."
+  exit 1
+fi
+
+cd "$GIT_ROOT"
+
+source "$SCRIPT_DIR/../common.sh"
+
+DOCKER_COMPOSE="docker compose -f $SCRIPT_DIR/docker-compose.yml"
+
+function wait_for_docker {
+    while ! nc -z localhost 8546; do
+      if ! is_network_running > /dev/null; then
+        echo "the container stopped"
+        exit 3
+      fi
+      sleep 0.5
+    done
+}
+
+function is_network_running {
+  $DOCKER_COMPOSE exec -T validator true && $DOCKER_COMPOSE exec -T passive true
+}
+
+function start {
+  $DOCKER_COMPOSE up -d
+}
+
+function cleanup {
+  $DOCKER_COMPOSE stop
+  docker logs "$($DOCKER_COMPOSE ps -q validator)" &> out/validator.log
+  docker logs "$($DOCKER_COMPOSE ps -q passive)" &> out/passive.log
+  $DOCKER_COMPOSE down
+}
+
+mkdir -p out/
+
+echo "building SC EVM docker container"
+sbt 'set node/version := "latest"' node/Docker/publishLocal || exit 3
+
+echo "Starting SC EVM network in docker compose"
+start
+
+trap "cleanup" EXIT
+
+(
+  cd "$SCRIPT_DIR"
+  ./setup.sh
+)
+
+wait_for_docker
+
+export SC_EVM_URL=http://localhost:8546
+"$SCRIPT_DIR/run_tests.sh" ERC20

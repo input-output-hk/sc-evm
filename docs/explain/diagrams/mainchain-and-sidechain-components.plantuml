@@ -1,0 +1,67 @@
+@startuml "Component diagram"
+
+title "Applications component diagram"
+
+' Sidechain/ SC_EVM
+cloud "SC_EVM sidechain" as sidechain {
+    node "Block producer or passive" <<SC_EVM node>> as scEvm1 {
+        component App as app1
+        database RocksDb <<embedded DB>> as rocksDb1
+        app1 -left-> rocksDb1
+    }
+    interface RPC as rpc1
+    app1 - rpc1
+
+    note top of scEvm1: Block producer, passive or faucet
+}
+
+' Faucet
+interface HTTP <<web>> as faucet_ui_http
+node "Faucet UI" <<SC_EVM faucet web>> as faucet_ui
+faucet_ui - faucet_ui_http
+
+' Observer
+node Observer <<Scala app for lag metrics>> as observer
+
+' Explorer
+node Explorer <<Blockscout>> as explorer
+interface HTTP <<web>> as explorer_http
+explorer - explorer_http
+
+' Relay
+node Relay as relay
+
+' CTL
+frame "CTL" <<Cardano Transcation Library runtime>> as ctl {
+    node Ogmios <<query layer for cardano chain>>
+    node "Ogmios Datum Cache" <<query layer for datums>> as ogmios_datum
+    node "CTL server" <<apply arguments to Plutus scripts>> as ctl_server
+    Ogmios . ogmios_datum
+    Ogmios .left. ctl_server
+}
+
+' Chain follower
+node {
+    node DbSync <<chain follower>> as db_sync
+    database Patroni <<PSQL>>
+}
+
+' Main chain
+cloud "main chain" {
+    interface socket
+    node "cardano node" as mainchain
+    mainchain - socket
+}
+
+' Links
+db_sync -> mainchain: follows
+app1 -down-> Patroni: queries information from\n main chain
+db_sync -up-> Patroni: writes
+rpc1 <-down- relay: queries pending\n outgoing transcations
+relay --> ctl: sends cli commands over HTTP
+ctl --> socket: sends
+explorer - rpc1
+faucet_ui -down-> rpc1: sends funding transactions
+Patroni <-left- observer: queries
+
+@enduml

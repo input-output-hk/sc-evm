@@ -1,0 +1,46 @@
+version: "3.8"
+
+networks:
+  sc-evm-net:
+
+services:
+  passive1:
+    image: scevm_image:latest
+    ports:
+      - 9079:9076 # p2p
+      - 8549:8546 # rpc
+    networks:
+      - sc-evm-net
+    environment:
+      - SC_EVM_BOOTSTRAP_1
+      - SC_EVM_BOOTSTRAP_2
+      - SC_EVM_BOOTSTRAP_3
+      - START_SYNC=true
+      - SC_EVM_LOGLEVEL=DEBUG
+      - SC_EVM_AKKA_LOGLEVEL=DEBUG
+      - METRICS_ENABLED=true
+      - TRACING_ENABLED=true
+      - TRACING_EXPORT_HOST=tempo
+      - TRACING_EXPORT_PORT=55681
+    volumes:
+      - "./sc-evm-instances/passive1:/home/demiourgos728/.sc-evm"
+    command: ["-Dconfig.file=./conf/local-standalone/application.conf"]
+
+  passive_leaf1:
+    image: scevm_image:latest
+    ports:
+      - 9080:9076 # p2p
+      - 8550:8546 # rpc
+    networks:
+      - sc-evm-net
+    environment:
+      - SC_EVM_BOOTSTRAP_1=enode://3df671b4259f4937c0eab81751519470bea0396e62ddc3eb7266af913a1047a882bd3f42512873c5b1c465de63952631d736221ebb673eb5fbabda707b0b79b9@passive1:9076
+      - START_SYNC=true
+      - SC_EVM_LOGLEVEL=DEBUG
+      - SC_EVM_AKKA_LOGLEVEL=DEBUG
+      - METRICS_ENABLED=true
+      - TRACING_EXPORT_HOST=tempo
+      - TRACING_EXPORT_PORT=55681
+    volumes:
+      - "./sc-evm-instances/passive_leaf1:/home/demiourgos728/.sc-evm"
+    command: ["-Dconfig.file=./conf/local-standalone/application.conf"]

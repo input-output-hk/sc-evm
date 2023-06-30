@@ -1,0 +1,20 @@
+{
+  "runtimeConfig": {
+    "network": null,
+    "ogmios": {
+      "host": "localhost",
+      "port": 1337,
+      "path": null,
+      "secure": false
+    },
+    "kupo": {
+      "host": "localhost",
+      "port": 9999,
+      "path": null,
+      "secure": false
+    }
+  },
+  "sidechainParameters": null,
+  "paymentSigningKeyFile": null,
+  "stakeSigningKeyFile": null
+}

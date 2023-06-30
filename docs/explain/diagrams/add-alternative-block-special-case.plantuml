@@ -1,0 +1,14 @@
+@startmindmap
+
+caption figure 1 bis
+title "Adding first alternative block"
+
+legend
+  Blue: genesis
+  Green: new block (de facto latest block)
+endlegend
+
+*[#lightBlue] G
+**[#lightGreen] A0 (extending stable)
+
+@endmindmap

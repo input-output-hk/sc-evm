@@ -1,0 +1,27 @@
+@startuml modules
+
+component core [
+  core/domain
+]
+
+component bytes #LightGray
+component crypto #LightGray
+component rlp #LightGray
+
+[rlp] --> [bytes]
+
+[consensus] --> [metrics]
+[consensus] --> [execution]
+[core] --> [crypto]
+[core] --> [rlp]
+[execution] --> [storage]
+[metrics] --> [core]
+[network] --> [storage]
+[network] --> [metrics]
+[rpc] --> [consensus]
+[storage] --> [core]
+[rpc] --> [network]
+[sync] --> [consensus]
+[sync] --> [network]
+
+@enduml

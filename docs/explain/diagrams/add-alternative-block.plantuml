@@ -1,0 +1,28 @@
+@startmindmap
+
+caption figure 1
+title "Adding an alternative block"
+
+legend
+  Blue: stable
+  White: blocks
+  Green: new block/ new tips
+  Orange: latest blocks (tips)
+endlegend
+
+*_ stable chain
+**[#lightBlue] S
+*** A0
+****[#lightGreen] A1' (forking)
+**** A1
+*****[#Coral] A2
+******[#lightGreen] A3 (extending longest)
+*** B0
+****[#Coral] B1
+***[#Coral] C0
+****[#lightGreen] C1 (extending)
+***[#lightGreen] D0 (forking)
+***_ ?
+****[#lightGreen] E_ (not connected)
+
+@endmindmap

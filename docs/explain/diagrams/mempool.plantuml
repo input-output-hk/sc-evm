@@ -1,0 +1,30 @@
+@startuml mempool
+hide footbox
+
+box "external" #LightGrey
+participant peerA
+end box
+
+box "network module" #LightSteelBlue
+actor PeerEventBus
+actor TransactionForwarder
+peerA -> PeerEventBus: SignedTransactions(...)
+PeerEventBus -> TransactionForwarder: SignedTransactions(...)
+end box
+
+
+box "execution module" #LightSalmon
+TransactionForwarder -> TransactionHandler: List[SignedTransaction]
+
+TransactionHandler -> MempoolService: SignedTransaction (valid)
+end box
+
+box "network module" #LightSteelBlue
+MempoolService -> GossipService: transaction(s) to gossip
+end box
+
+box "external" #LightGrey
+GossipService -> peerX: SignedTransactions(...)
+GossipService -> peerY: SignedTransactions(...)
+end box
+@enduml

@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  validator:
+    image: scevm_image:latest
+    environment:
+      - SC_EVM_LOGLEVEL=INFO
+    command:
+      [
+        "-Dconfig.file=./conf/local-standalone-fast/application.conf",
+        "-Dsc-evm.node-key-file=/validator-node.key",
+      ]
+    volumes:
+      - "./validator-node.key:/validator-node.key:ro"
+  passive:
+    image: scevm_image:latest
+    ports:
+      - 8546:8546 # rpc
+    depends_on:
+      - validator
+    environment:
+      - SC_EVM_LOGLEVEL=INFO
+      - SC_EVM_BOOTSTRAP_1=enode://72487d5713380448a5ec96a810458ef2ac3c2db858dff20266dbb1b6e8b7bba964475e4ab9d7cab44d9f6fcc70fa5533cc967e91d116055aded7ef338120901b@validator:9076
+      - SC_EVM_FAUCET_PRIVATE_KEY=371ab8d159f63b2ab96c3fdf2e2511f0ced95b6f9c836f8699cad6beceed5eaa
+    command:
+      [
+        "-Dconfig.file=./conf/local-standalone-fast/application-passive.conf",
+        "-Dsc-evm.network.rpc.http.interface=0.0.0.0",
+      ]

@@ -1,0 +1,58 @@
+# Please, don't use any default port allocations.
+# https://github.com/prometheus/prometheus/wiki/Default-port-allocations
+global:
+  scrape_interval: 1m
+  scrape_timeout: 10s
+  evaluation_interval: 1m
+scrape_configs:
+  - job_name: prometheus
+    honor_timestamps: true
+    scrape_interval: 5s
+    scrape_timeout: 5s
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets:
+          - prometheus:9090
+        labels:
+          alias: prometheus
+  - job_name: node
+    honor_timestamps: true
+    scrape_interval: 10s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets:
+          - scevm1:13798
+          - scevm2:13798
+          - scevm3:13798
+          - passive1:13798
+          - passive_leaf1:13798
+        labels:
+          alias: scevm-node
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: nomad_alloc_name
+        regex: "(.+):(.+)"
+        replacement: "$1"
+  - job_name: otel-collector
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - otel-collector:8889
+          - otel-collector:8888
+  - job_name: akka
+    honor_timestamps: true
+    scrape_interval: 10s
+    scrape_timeout: 10s
+    scheme: http
+    static_configs:
+      - targets:
+          - scevm1:9095
+          - scevm2:9095
+          - scevm3:9095
+          - passive1:9095
+          - passive_leaf1:9095
+        labels:
+          alias: scevm-akka-node

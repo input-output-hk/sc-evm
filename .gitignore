@@ -1,0 +1,62 @@
+target/
+dist/*
+project/boot/
+project/plugins/project/
+.ensime
+.ensime_cache/
+.bloop
+out/
+.bsp/
+contractlog.json
+
+# IDE folders
+.idea/
+.metals/
+metals.sbt
+.vscode/
+
+# intellij scala worksheet
+*.sc
+
+*.log
+*.log.zip
+.evm-runner_history
+
+# Nix
+result
+.nix/
+.direnv
+.run
+
+# sonarScan
+.scannerwork/
+
+# Ops
+secrets/
+**/.terraform
+.terragrunt-cache
+.terraform.lock.hcl
+.std
+cert.config
+config.tf.json
+result*
+*.plan
+.idea
+.std
+.envrc.local
+workbench
+
+#cardano state
+/.data
+
+# tools/python power user script
+__pycache__
+/config.json
+
+# relay - user config.json
+tooling/relay/config.json
+
+.scala-build
+
+# project specific dictionary
+.dict

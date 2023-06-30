@@ -1,0 +1,41 @@
+@startuml
+
+title "Docker compose topology"
+
+frame "sc-evm-devnet" {
+    ' entities
+    node SC_EVM {
+        file logs
+        component TracingServer
+        component MetricsService
+    }
+
+    node Promtail
+
+    package datasources {
+        node Loki
+        node Tempo
+        node Prometheus
+    }
+
+    node Grafana
+
+    ' interfaces
+    '' logs
+    Promtail -> logs : reads
+    Promtail -(0-> Loki : http://loki:3100/loki/api/v1/push
+    Loki <-0)- Grafana : http://loki:3100
+
+    '' metrics
+    MetricsService -(0-> Prometheus : http://localhost:13798
+    Prometheus <-0)- Grafana : http://prometheus:9090
+
+    '' traces
+    TracingServer -(0-> Tempo : http://tempo:55681
+    Tempo <-0)- Grafana : http://tempo:3200
+}
+
+interface grafanaPage as "Webpage (http://localhost:3000)"
+Grafana -down- grafanaPage
+
+@enduml
