@@ -22,7 +22,7 @@ Ouroboros-BFT.
 
 Some documentation is available in the [docs](./docs) folder.
 
-The technical specification is [here](./TECHNICAL_SPECIFICATION_v1.0.pdf).
+The technical specification is [here](./TECHNICAL_SPECIFICATION_v1.1.pdf).
 
 ## Next steps
 
