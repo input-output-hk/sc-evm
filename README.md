@@ -18,6 +18,13 @@ The Proof-of-Concept EVM Sidechain client is the sidechain client component desc
 sidechain toolkit specification. Written in Scala, the client runs as a sidechain to a Cardano network based on
 Ouroboros-BFT.
 
+### Building
+
+The EVM Sidechain client uses dependencies that are hosted on GitHub Packages.
+In order to build it, you need to obtain a GitHub personal access token and
+pass it to SBT either via the `github.token` Java property or `GITHUB_TOKEN`
+environment variable.
+
 ### Documentation
 
 Some documentation is available in the [docs](./docs) folder.
