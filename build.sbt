@@ -51,6 +51,16 @@ def fatalWarnings(warnings: Seq[String]): Seq[String] = Seq(if (sys.env.get("SC_
   "-Wconf:" ++ (warnings :+ "any:e").mkString(",")
 }) ++ Seq("-Ypatmat-exhaust-depth", "off")
 
+def githubToken = sys.env.get("GITHUB_TOKEN")
+  .orElse(Some(System.getProperty("github.token")))
+  .getOrElse(
+    throw new Exception(
+      "environment variable GITHUB_TOKEN or Java property github.token" +
+        " needs to be set to a GitHub token with read:packages permission"
+    )
+  )
+
+
 inThisBuild(
   List(
     organization := "io.iohk",
@@ -59,10 +69,13 @@ inThisBuild(
     scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(
       scalaVersion.value
     ),
+    credentials += Credentials("GitHub Package Registry", "maven.pkg.github.com", "_", githubToken),
     // Scalanet snapshots are published to Sonatype after each build.
     resolvers ++= Seq(
       "Sonatype OSS Snapshots".at("https://oss.sonatype.org/content/repositories/snapshots"),
-      "IOG Nexus".at("https://nexus.iog.solutions/repository/maven-release/")
+      "GitHub Package Registry (input-output-hk/armadillo)".at(
+        "https://maven.pkg.github.com/input-output-hk/armadillo"
+      )
     ),
     scalafixDependencies ++= List(
       "com.github.liancheng" %% "organize-imports" % "0.6.0",

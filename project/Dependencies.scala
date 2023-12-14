@@ -193,7 +193,7 @@ object Dependencies {
   }
 
   val armadillo: Seq[ModuleID] = {
-    val armadilloVersion: String = "0.0.14"
+    val armadilloVersion: String = "0.1.0"
     Seq(
       "io.iohk.armadillo"             %% "armadillo-server-tapir"  % armadilloVersion,
       "io.iohk.armadillo"             %% "armadillo-json-json4s"   % armadilloVersion,
